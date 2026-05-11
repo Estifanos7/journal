@@ -5550,22 +5550,24 @@ async function loadAppData(userId) {
   const loadEl = document.getElementById('appLoadingOverlay');
   loadEl.classList.remove('hidden');
 
-  // Load accounts
-  const { data: acctData, error: acctErr } = await _supabase
-    .from('accounts').select('*').eq('user_id', userId).order('created_at');
-  if (!acctErr && acctData) accounts = acctData;
+  try {
+    const { data: acctData, error: acctErr } = await _supabase
+      .from('accounts').select('*').eq('user_id', userId).order('created_at');
+    if (acctErr) throw acctErr;
+    if (acctData) accounts = acctData;
 
-  // Load trades — normalise account_id → accountId for existing JS
-  const { data: tradeData, error: tradeErr } = await _supabase
-    .from('trades').select('*').eq('user_id', userId).order('date', { ascending: false });
-  if (!tradeErr && tradeData) {
-    trades = tradeData.map(t => ({ ...t, accountId: t.account_id }));
+    const { data: tradeData, error: tradeErr } = await _supabase
+      .from('trades').select('*').eq('user_id', userId).order('date', { ascending: false });
+    if (tradeErr) throw tradeErr;
+    if (tradeData) trades = tradeData.map(t => ({ ...t, accountId: t.account_id }));
+
+  } catch(e) {
+    alert('Load error: ' + e.message);
   }
 
   loadEl.classList.add('hidden');
   document.getElementById('loginScreen').classList.add('hidden');
 
-  // Boot the app
   renderAccounts();
   populateAccountDropdown();
   render();
