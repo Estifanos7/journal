@@ -5538,8 +5538,12 @@ async function handleMagicLink() {
 async function handleSignOut() {
   await _supabase.auth.signOut();
   trades = []; accounts = [];
+  try { renderAccounts(); } catch(e) {}
+  try { populateAccountDropdown(); } catch(e) {}
+  try { render(); } catch(e) {}
   document.getElementById('loginScreen').classList.remove('hidden');
-  document.getElementById('loginMsg') && (document.getElementById('loginMsg').className = 'login-msg');
+  const _msgEl = document.getElementById('loginMsg');
+  if (_msgEl) _msgEl.className = 'login-msg';
 }
 
 async function loadAppData(userId) {
@@ -5571,6 +5575,17 @@ async function loadAppData(userId) {
 
 if (_supabase) {
   _supabase.auth.onAuthStateChange(async (event, session) => {
+    if (session?.user) {
+      await loadAppData(session.user.id);
+    } else {
+      document.getElementById('appLoadingOverlay').classList.add('hidden');
+      document.getElementById('loginScreen').classList.remove('hidden');
+    }
+  });
+} else {
+  const _ol = document.getElementById('appLoadingOverlay');
+  if (_ol) _ol.classList.add('hidden');
+}
 
 </script>
 </body>
