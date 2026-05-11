@@ -5574,14 +5574,39 @@ async function loadAppData(userId) {
 }
 
 if (_supabase) {
-  _supabase.auth.onAuthStateChange(async (event, session) => {
-    if (session?.user) {
+  let _appLoaded = false;
+
+  // ── 1. Check for an existing session immediately on page load ──
+  // This handles refresh/reload — we don't wait for onAuthStateChange
+  // which can be slow or fire with null before the session is restored.
+  _supabase.auth.getSession().then(async ({ data: { session } }) => {
+    if (session?.user && !_appLoaded) {
+      _appLoaded = true;
       await loadAppData(session.user.id);
-    } else {
+    } else if (!session) {
       document.getElementById('appLoadingOverlay').classList.add('hidden');
       document.getElementById('loginScreen').classList.remove('hidden');
     }
   });
+
+  // ── 2. Listen for sign in / sign out events ──
+  // SIGNED_IN: fires when user logs in fresh (not on reload — getSession handles that)
+  // SIGNED_OUT: fires when user logs out
+  _supabase.auth.onAuthStateChange(async (event, session) => {
+    if (event === 'SIGNED_IN' && session?.user && !_appLoaded) {
+      _appLoaded = true;
+      await loadAppData(session.user.id);
+    } else if (event === 'SIGNED_OUT') {
+      _appLoaded = false;
+      trades = []; accounts = [];
+      try { renderAccounts(); } catch(e) {}
+      try { populateAccountDropdown(); } catch(e) {}
+      try { render(); } catch(e) {}
+      document.getElementById('appLoadingOverlay').classList.add('hidden');
+      document.getElementById('loginScreen').classList.remove('hidden');
+    }
+  });
+
 } else {
   const _ol = document.getElementById('appLoadingOverlay');
   if (_ol) _ol.classList.add('hidden');
