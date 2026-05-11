@@ -5479,6 +5479,10 @@ const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFz
 
 const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON, {
   auth: {
+    lock: (name, acquireTimeout, fn) => fn(),
+  }
+});
+  auth: {
     storage: {
       getItem: (key) => Promise.resolve(localStorage.getItem(key)),
       setItem: (key, value) => Promise.resolve(localStorage.setItem(key, value)),
