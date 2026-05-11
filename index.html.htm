@@ -5539,13 +5539,6 @@ async function handleMagicLink() {
   setLoginMsg('Magic link sent! Check your email.', 'success');
 }
 
-async function handleSignOut() {
-  await _supabase.auth.signOut();
-  trades = []; accounts = [];
-  document.getElementById('loginScreen').classList.remove('hidden');
-  document.getElementById('loginMsg') && (document.getElementById('loginMsg').className = 'login-msg');
-}
-
 async function loadAppData(userId) {
   const loadEl = document.getElementById('appLoadingOverlay');
   loadEl.classList.remove('hidden');
@@ -5555,11 +5548,13 @@ async function loadAppData(userId) {
       .from('accounts').select('*').eq('user_id', userId).order('created_at');
     if (acctErr) throw acctErr;
     if (acctData) accounts = acctData;
+    alert('Accounts loaded: ' + accounts.length);
 
     const { data: tradeData, error: tradeErr } = await _supabase
       .from('trades').select('*').eq('user_id', userId).order('date', { ascending: false });
     if (tradeErr) throw tradeErr;
     if (tradeData) trades = tradeData.map(t => ({ ...t, accountId: t.account_id }));
+    alert('Trades loaded: ' + trades.length);
 
   } catch(e) {
     alert('Load error: ' + e.message);
@@ -5567,6 +5562,7 @@ async function loadAppData(userId) {
 
   loadEl.classList.add('hidden');
   document.getElementById('loginScreen').classList.add('hidden');
+  alert('Login screen hidden — booting app');
 
   renderAccounts();
   populateAccountDropdown();
@@ -5577,7 +5573,6 @@ async function loadAppData(userId) {
 
 // Auth state listener — fires on page load and on sign in/out
 _supabase.auth.onAuthStateChange(async (event, session) => {
-  alert('Auth event: ' + event + ' user: ' + (session?.user?.email || 'none'));
   if (session?.user) {
     await loadAppData(session.user.id);
   } else {
