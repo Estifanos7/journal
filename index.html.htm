@@ -5562,7 +5562,9 @@ async function loadAppData(userId) {
   }
 
   loadEl.classList.add('hidden');
-  document.getElementById('loginScreen').classList.add('hidden');
+ const ls = document.getElementById('loginScreen');
+ls.style.display = 'none';
+ls.classList.add('hidden');
   alert('Login screen hidden — booting app');
 
   renderAccounts();
