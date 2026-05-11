@@ -5540,32 +5540,24 @@ async function handleMagicLink() {
 }
 
 async function loadAppData(userId) {
-  alert('loadAppData started');
   const loadEl = document.getElementById('appLoadingOverlay');
-  loadEl.classList.remove('hidden');
+  if (loadEl) loadEl.style.display = 'none';
 
   try {
-    const { data: acctData, error: acctErr } = await _supabase
+    const { data: acctData } = await _supabase
       .from('accounts').select('*').eq('user_id', userId).order('created_at');
-    if (acctErr) throw acctErr;
     if (acctData) accounts = acctData;
-    alert('Accounts loaded: ' + accounts.length);
 
-    const { data: tradeData, error: tradeErr } = await _supabase
+    const { data: tradeData } = await _supabase
       .from('trades').select('*').eq('user_id', userId).order('date', { ascending: false });
-    if (tradeErr) throw tradeErr;
     if (tradeData) trades = tradeData.map(t => ({ ...t, accountId: t.account_id }));
-    alert('Trades loaded: ' + trades.length);
 
   } catch(e) {
-    alert('Load error: ' + e.message);
+    console.error(e);
   }
 
-  loadEl.classList.add('hidden');
- const ls = document.getElementById('loginScreen');
-ls.style.display = 'none';
-ls.classList.add('hidden');
-  alert('Login screen hidden — booting app');
+  const ls = document.getElementById('loginScreen');
+  if (ls) { ls.style.display = 'none'; ls.classList.add('hidden'); }
 
   renderAccounts();
   populateAccountDropdown();
