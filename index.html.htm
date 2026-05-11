@@ -5477,7 +5477,15 @@ const SUPABASE_URL  = 'https://hbltuiycqrkrxnfnxtoc.supabase.co';
 const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhibHR1aXljcXJrcnhuZm54dG9jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgyNjQ5MzIsImV4cCI6MjA5Mzg0MDkzMn0.xIsukbhArGNbBThDZhJ3Jck4BOpTZANBY3I6SP_uOrI';
 // ─────────────────────────────────────────────────────────────────
 
-const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON, {
+  auth: {
+    storage: {
+      getItem: (key) => Promise.resolve(localStorage.getItem(key)),
+      setItem: (key, value) => Promise.resolve(localStorage.setItem(key, value)),
+      removeItem: (key) => Promise.resolve(localStorage.removeItem(key)),
+    }
+  }
+});
 
 let _signupMode = false;
 
