@@ -5569,16 +5569,8 @@ async function loadAppData(userId) {
   refreshEquityData();
 }
 
-// Auth state listener — fires on page load and on sign in/out
-_supabase.auth.onAuthStateChange(async (event, session) => {
-  if (session?.user) {
-    await loadAppData(session.user.id);
-  } else {
-    document.getElementById('appLoadingOverlay').classList.add('hidden');
-    document.getElementById('loginScreen').classList.remove('hidden');
-  }
-});
-
+if (_supabase) {
+  _supabase.auth.onAuthStateChange(async (event, session) => {
 
 </script>
 </body>
