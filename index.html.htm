@@ -5577,6 +5577,7 @@ async function loadAppData(userId) {
 
 // Auth state listener — fires on page load and on sign in/out
 _supabase.auth.onAuthStateChange(async (event, session) => {
+  alert('Auth event: ' + event + ' user: ' + (session?.user?.email || 'none'));
   if (session?.user) {
     await loadAppData(session.user.id);
   } else {
