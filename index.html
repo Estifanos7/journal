@@ -2,38 +2,215 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">8
-  <title>Journals </title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>📈 Trading Journal</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
   <style>
     /* ─── LOGIN SCREEN ─── */
-    #loginScreen {
+    /* ── HOME PAGE ── */
+    #homePage {
       position: fixed; inset: 0; z-index: 99999;
       background: #080b10;
       background-image:
-        radial-gradient(ellipse at 0% 0%, #00c8ff08 0%, transparent 60%),
-        radial-gradient(ellipse at 100% 100%, #26d96a06 0%, transparent 60%);
-      display: flex; align-items: center; justify-content: center;
+        radial-gradient(ellipse at 10% 20%, #00c8ff0a 0%, transparent 55%),
+        radial-gradient(ellipse at 90% 80%, #26d96a07 0%, transparent 55%),
+        radial-gradient(ellipse at 50% 50%, #0090b804 0%, transparent 70%);
       font-family: 'Syne', sans-serif;
+      overflow: hidden;
+      display: flex; flex-direction: column;
     }
-    #loginScreen.hidden { display: none; }
-    .login-box {
-      width: 100%; max-width: 400px; padding: 24px;
+    #homePage.hidden { display: none !important; }
+
+    /* grid lines background */
+    #homePage::before {
+      content: '';
+      position: absolute; inset: 0; z-index: 0;
+      background-image:
+        linear-gradient(#00c8ff06 1px, transparent 1px),
+        linear-gradient(90deg, #00c8ff06 1px, transparent 1px);
+      background-size: 60px 60px;
+      pointer-events: none;
     }
+
+    /* top nav */
+    .home-nav {
+      position: relative; z-index: 2;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 22px 40px;
+    }
+    .home-nav-logo {
+      font-size: 1.1rem; font-weight: 800; color: #fff; letter-spacing: -0.3px;
+    }
+    .home-nav-logo span { color: #00c8ff; }
+    .home-login-btn {
+      padding: 9px 22px; border-radius: 8px;
+      background: transparent; border: 1px solid #00c8ff55;
+      color: #00c8ff; font-family: 'Syne', sans-serif;
+      font-size: 0.82rem; font-weight: 700; cursor: pointer;
+      letter-spacing: 0.3px;
+      transition: all 0.2s;
+    }
+    .home-login-btn:hover {
+      background: #00c8ff15; border-color: #00c8ff;
+      box-shadow: 0 0 16px #00c8ff22;
+    }
+
+    /* hero is now a left column inside .home-body */
+    .home-body {
+      position: relative; z-index: 2;
+      flex: 1; display: flex; align-items: center;
+      gap: 40px; padding: 0 40px;
+      overflow: hidden;
+    }
+    .home-hero {
+      flex: 0 0 420px; display: flex; flex-direction: column;
+      align-items: flex-start; text-align: left;
+    }
+    .home-eyebrow {
+      font-family: 'JetBrains Mono', monospace; font-size: 0.65rem;
+      font-weight: 600; text-transform: uppercase; letter-spacing: 2.5px;
+      color: #00c8ff; margin-bottom: 22px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .home-eyebrow::before { content: ''; width: 30px; height: 1px; background: #00c8ff55; }
+    .home-headline {
+      font-size: clamp(2.2rem, 4vw, 3.8rem);
+      font-weight: 800; color: #fff; line-height: 1.05;
+      letter-spacing: -2px; margin-bottom: 20px;
+    }
+    .home-headline span { color: #00c8ff; }
+    .home-sub {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      color: #546e7a; line-height: 1.7; max-width: 380px;
+      margin-bottom: 36px;
+    }
+    .home-cta-row { display: flex; gap: 14px; flex-wrap: wrap; }
+
+    /* preview thumbnails */
+    .home-previews {
+      flex: 1; display: flex; flex-direction: column; gap: 16px;
+      min-width: 0; max-width: 600px;
+    }
+    .preview-card {
+      background: #0a0f17;
+      border: 1px solid #1e2a38;
+      border-radius: 12px; padding: 14px 16px 10px;
+      position: relative; overflow: hidden;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .preview-card:hover {
+      border-color: #00c8ff33;
+      box-shadow: 0 0 24px #00c8ff0a;
+    }
+    .preview-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, #00c8ff22, transparent);
+    }
+    .preview-label {
+      font-family: 'JetBrains Mono', monospace; font-size: 0.6rem;
+      color: #546e7a; margin-bottom: 10px; letter-spacing: 0.5px;
+    }
+    .preview-svg { width: 100%; height: auto; display: block; }
+    .preview-footer {
+      display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap;
+    }
+    .preview-badge {
+      font-family: 'JetBrains Mono', monospace; font-size: 0.6rem;
+      padding: 3px 9px; border-radius: 4px; letter-spacing: 0.3px;
+    }
+    .preview-badge.green { background: #26d96a14; border: 1px solid #26d96a30; color: #26d96a; }
+    .preview-badge.blue  { background: #00c8ff14; border: 1px solid #00c8ff30; color: #00c8ff; }
+    .preview-badge.red   { background: #ff475714; border: 1px solid #ff475730; color: #ff4757; }
+
+    @media (max-width: 900px) {
+      .home-body { flex-direction: column; padding: 20px 20px 0; gap: 24px; overflow-y: auto; }
+      .home-hero { flex: none; align-items: center; text-align: center; }
+      .home-eyebrow::before { display: none; }
+      .home-cta-row { justify-content: center; }
+      .home-previews { max-width: 100%; }
+      .home-stats { flex-wrap: wrap; gap: 0; }
+      .home-stat { padding: 12px 20px; }
+    }
+    .home-cta-primary {
+      padding: 14px 36px; border-radius: 9px; border: none;
+      background: #00a0c8; color: #fff;
+      font-family: 'Syne', sans-serif; font-size: 0.92rem; font-weight: 700;
+      cursor: pointer; letter-spacing: 0.2px;
+      transition: all 0.2s; box-shadow: 0 0 28px #00c8ff30;
+    }
+    .home-cta-primary:hover { background: #00c8ff; box-shadow: 0 0 36px #00c8ff50; transform: translateY(-1px); }
+    .home-cta-secondary {
+      padding: 14px 28px; border-radius: 9px;
+      border: 1px solid #1e2a38; background: transparent;
+      color: #8899aa; font-family: 'Syne', sans-serif;
+      font-size: 0.92rem; font-weight: 700; cursor: pointer;
+      transition: all 0.2s;
+    }
+    .home-cta-secondary:hover { border-color: #546e7a; color: #cdd9e5; }
+
+    /* stats strip */
+    .home-stats {
+      position: relative; z-index: 2;
+      display: flex; justify-content: center; gap: 0;
+      border-top: 1px solid #1e2a38; padding: 22px 40px;
+    }
+    .home-stat {
+      padding: 0 36px; text-align: center;
+      border-right: 1px solid #1e2a38;
+    }
+    .home-stat:last-child { border-right: none; }
+    .home-stat-val {
+      font-size: 1.4rem; font-weight: 800; color: #fff; letter-spacing: -0.5px;
+    }
+    .home-stat-val span { color: #00c8ff; }
+    .home-stat-label {
+      font-family: 'JetBrains Mono', monospace; font-size: 0.58rem;
+      color: #546e7a; text-transform: uppercase; letter-spacing: 1px; margin-top: 3px;
+    }
+
+    /* ── LOGIN MODAL ── */
+    #loginModalBackdrop {
+      position: fixed; inset: 0; z-index: 999999;
+      background: #00000088; backdrop-filter: blur(6px);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.22s;
+    }
+    #loginModalBackdrop.open { opacity: 1; pointer-events: all; }
+
+    .login-modal {
+      background: #0f1419; border: 1px solid #1e2a38;
+      border-radius: 16px; padding: 32px; width: 100%; max-width: 380px;
+      margin: 16px;
+      transform: translateY(16px) scale(0.97);
+      transition: transform 0.22s;
+      position: relative;
+    }
+    #loginModalBackdrop.open .login-modal { transform: translateY(0) scale(1); }
+
+    .login-modal-close {
+      position: absolute; top: 16px; right: 16px;
+      width: 28px; height: 28px; border-radius: 6px;
+      background: #1e2a38; border: none; color: #546e7a;
+      font-size: 1rem; cursor: pointer; display: flex;
+      align-items: center; justify-content: center;
+      transition: all 0.15s;
+    }
+    .login-modal-close:hover { background: #ff475720; color: #ff4757; }
+
     .login-logo {
-      font-size: 2rem; font-weight: 800; color: #fff;
-      letter-spacing: -0.5px; margin-bottom: 6px;
+      font-size: 1.4rem; font-weight: 800; color: #fff;
+      letter-spacing: -0.5px; margin-bottom: 4px;
     }
     .login-logo span { color: #00c8ff; }
     .login-sub {
-      font-family: 'JetBrains Mono', monospace; font-size: 0.68rem;
-      color: #546e7a; margin-bottom: 36px;
+      font-family: 'JetBrains Mono', monospace; font-size: 0.62rem;
+      color: #546e7a; margin-bottom: 24px;
     }
-    .login-card {
-      background: #0f1419; border: 1px solid #1e2a38;
-      border-radius: 14px; padding: 28px;
-    }
+    .login-card { background: transparent; border: none; padding: 0; }
     .login-card-title {
       font-family: 'JetBrains Mono', monospace; font-size: 0.62rem;
       font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
@@ -63,8 +240,7 @@
     .login-btn:hover { background: #00c8ff; }
     .login-btn:disabled { opacity: 0.5; cursor: not-allowed; }
     .login-divider {
-      display: flex; align-items: center; gap: 10px;
-      margin: 18px 0;
+      display: flex; align-items: center; gap: 10px; margin: 18px 0;
     }
     .login-divider::before, .login-divider::after {
       content:''; flex:1; height:1px; background:#1e2a38;
@@ -88,8 +264,7 @@
     .login-toggle a { color: #00c8ff; cursor: pointer; text-decoration: underline; }
     .login-msg {
       margin-top: 14px; padding: 10px 14px; border-radius: 7px;
-      font-family: 'JetBrains Mono', monospace; font-size: 0.7rem;
-      display: none;
+      font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; display: none;
     }
     .login-msg.error { background: #ff475714; border: 1px solid #ff475740; color: #ff4757; display:block; }
     .login-msg.success { background: #26d96a14; border: 1px solid #26d96a40; color: #26d96a; display:block; }
@@ -2750,13 +2925,200 @@
 <body>
 
 <!-- ─── LOGIN SCREEN ─── -->
-<div id="loginScreen">
-  <div class="login-box">
-    <div class="login-logo">8 <span>Journals</span></div>
+<!-- ─── HOME PAGE ─── -->
+<div id="homePage" class="hidden">
+  <nav class="home-nav">
+    <div class="home-nav-logo">📈 Trading <span>Journal</span></div>
+    <button class="home-login-btn" onclick="openLoginModal()">Sign In →</button>
+  </nav>
+
+  <div class="home-body">
+    <!-- LEFT: hero text -->
+    <div class="home-hero">
+      <div class="home-eyebrow">Professional Trading Journal</div>
+      <h1 class="home-headline">
+        Track every trade.<br><span>Master your edge.</span>
+      </h1>
+      <p class="home-sub">
+        // A terminal-grade journal built for serious traders.<br>
+        Log trades, analyze performance, and spot what makes you profitable.
+      </p>
+      <div class="home-cta-row">
+        <button class="home-cta-primary" onclick="openLoginModal()">Get Started Free</button>
+        <button class="home-cta-secondary" onclick="openLoginModal()">Sign In</button>
+      </div>
+    </div>
+
+    <!-- RIGHT: preview thumbnails -->
+    <div class="home-previews">
+
+      <!-- Equity Curve thumbnail -->
+      <div class="preview-card">
+        <div class="preview-label">// equity_curve.chart</div>
+        <svg viewBox="0 0 340 160" xmlns="http://www.w3.org/2000/svg" class="preview-svg">
+          <!-- grid lines -->
+          <line x1="0" y1="40"  x2="340" y2="40"  stroke="#1e2a38" stroke-width="1"/>
+          <line x1="0" y1="80"  x2="340" y2="80"  stroke="#1e2a38" stroke-width="1"/>
+          <line x1="0" y1="120" x2="340" y2="120" stroke="#1e2a38" stroke-width="1"/>
+          <line x1="60"  y1="0" x2="60"  y2="160" stroke="#1e2a38" stroke-width="1" stroke-dasharray="3,4"/>
+          <line x1="120" y1="0" x2="120" y2="160" stroke="#1e2a38" stroke-width="1" stroke-dasharray="3,4"/>
+          <line x1="180" y1="0" x2="180" y2="160" stroke="#1e2a38" stroke-width="1" stroke-dasharray="3,4"/>
+          <line x1="240" y1="0" x2="240" y2="160" stroke="#1e2a38" stroke-width="1" stroke-dasharray="3,4"/>
+          <line x1="300" y1="0" x2="300" y2="160" stroke="#1e2a38" stroke-width="1" stroke-dasharray="3,4"/>
+          <!-- y-axis labels -->
+          <text x="4" y="38"  fill="#546e7a" font-size="8" font-family="monospace">+18%</text>
+          <text x="4" y="78"  fill="#546e7a" font-size="8" font-family="monospace">+9%</text>
+          <text x="4" y="118" fill="#546e7a" font-size="8" font-family="monospace">0%</text>
+          <!-- gradient fill under curve -->
+          <defs>
+            <linearGradient id="eqGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%"   stop-color="#00c8ff" stop-opacity="0.18"/>
+              <stop offset="100%" stop-color="#00c8ff" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+          <polygon
+            points="30,120 55,115 80,108 105,100 115,104 130,92 150,78 165,72 180,60 195,55 210,48 225,42 245,50 260,38 275,30 300,22 320,18 320,160 30,160"
+            fill="url(#eqGrad)"/>
+          <!-- main curve line -->
+          <polyline
+            points="30,120 55,115 80,108 105,100 115,104 130,92 150,78 165,72 180,60 195,55 210,48 225,42 245,50 260,38 275,30 300,22 320,18"
+            fill="none" stroke="#00c8ff" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+          <!-- highlight dot at peak -->
+          <circle cx="320" cy="18" r="4" fill="#00c8ff" opacity="0.9"/>
+          <circle cx="320" cy="18" r="8" fill="#00c8ff" opacity="0.15"/>
+          <!-- drawdown dip highlight -->
+          <polyline
+            points="105,100 115,104 130,92"
+            fill="none" stroke="#ff4757" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" opacity="0.7"/>
+          <!-- x-axis month labels -->
+          <text x="27"  y="155" fill="#546e7a" font-size="7" font-family="monospace">Jan</text>
+          <text x="87"  y="155" fill="#546e7a" font-size="7" font-family="monospace">Feb</text>
+          <text x="147" y="155" fill="#546e7a" font-size="7" font-family="monospace">Mar</text>
+          <text x="207" y="155" fill="#546e7a" font-size="7" font-family="monospace">Apr</text>
+          <text x="267" y="155" fill="#546e7a" font-size="7" font-family="monospace">May</text>
+          <!-- stat overlay -->
+          <rect x="220" y="4" width="112" height="28" rx="5" fill="#0f1419" stroke="#1e2a38" stroke-width="1"/>
+          <text x="228" y="14" fill="#546e7a" font-size="6.5" font-family="monospace">TOTAL RETURN</text>
+          <text x="228" y="26" fill="#26d96a" font-size="10" font-weight="bold" font-family="monospace">+18.4%</text>
+        </svg>
+        <div class="preview-footer">
+          <span class="preview-badge green">▲ +18.4% all time</span>
+          <span class="preview-badge blue">94 trades</span>
+        </div>
+      </div>
+
+      <!-- Calendar Heatmap thumbnail -->
+      <div class="preview-card">
+        <div class="preview-label">// calendar_pnl.heatmap</div>
+        <svg viewBox="0 0 340 140" xmlns="http://www.w3.org/2000/svg" class="preview-svg">
+          <!-- day-of-week headers -->
+          <text x="32"  y="12" fill="#546e7a" font-size="7" font-family="monospace" text-anchor="middle">M</text>
+          <text x="57"  y="12" fill="#546e7a" font-size="7" font-family="monospace" text-anchor="middle">T</text>
+          <text x="82"  y="12" fill="#546e7a" font-size="7" font-family="monospace" text-anchor="middle">W</text>
+          <text x="107" y="12" fill="#546e7a" font-size="7" font-family="monospace" text-anchor="middle">T</text>
+          <text x="132" y="12" fill="#546e7a" font-size="7" font-family="monospace" text-anchor="middle">F</text>
+          <!-- week labels -->
+          <text x="6" y="30"  fill="#546e7a" font-size="7" font-family="monospace">W1</text>
+          <text x="6" y="55"  fill="#546e7a" font-size="7" font-family="monospace">W2</text>
+          <text x="6" y="80"  fill="#546e7a" font-size="7" font-family="monospace">W3</text>
+          <text x="6" y="105" fill="#546e7a" font-size="7" font-family="monospace">W4</text>
+          <!-- Week 1 -->
+          <rect x="20" y="18" width="22" height="20" rx="3" fill="#26d96a" opacity="0.55"/>
+          <rect x="45" y="18" width="22" height="20" rx="3" fill="#ff4757" opacity="0.40"/>
+          <rect x="70" y="18" width="22" height="20" rx="3" fill="#26d96a" opacity="0.75"/>
+          <rect x="95" y="18" width="22" height="20" rx="3" fill="#26d96a" opacity="0.35"/>
+          <rect x="120" y="18" width="22" height="20" rx="3" fill="#26d96a" opacity="0.90"/>
+          <!-- Week 2 -->
+          <rect x="20" y="43" width="22" height="20" rx="3" fill="#ff4757" opacity="0.65"/>
+          <rect x="45" y="43" width="22" height="20" rx="3" fill="#ff4757" opacity="0.30"/>
+          <rect x="70" y="43" width="22" height="20" rx="3" fill="#26d96a" opacity="0.60"/>
+          <rect x="95" y="43" width="22" height="20" rx="3" fill="#26d96a" opacity="0.85"/>
+          <rect x="120" y="43" width="22" height="20" rx="3" fill="#1e2a38" opacity="0.8"/>
+          <!-- Week 3 -->
+          <rect x="20" y="68" width="22" height="20" rx="3" fill="#26d96a" opacity="0.45"/>
+          <rect x="45" y="68" width="22" height="20" rx="3" fill="#26d96a" opacity="1.0"/>
+          <rect x="70" y="68" width="22" height="20" rx="3" fill="#ff4757" opacity="0.50"/>
+          <rect x="95" y="68" width="22" height="20" rx="3" fill="#26d96a" opacity="0.70"/>
+          <rect x="120" y="68" width="22" height="20" rx="3" fill="#26d96a" opacity="0.55"/>
+          <!-- Week 4 -->
+          <rect x="20" y="93" width="22" height="20" rx="3" fill="#26d96a" opacity="0.30"/>
+          <rect x="45" y="93" width="22" height="20" rx="3" fill="#ff4757" opacity="0.70"/>
+          <rect x="70" y="93" width="22" height="20" rx="3" fill="#26d96a" opacity="0.65"/>
+          <rect x="95" y="93" width="22" height="20" rx="3" fill="#1e2a38" opacity="0.8"/>
+          <rect x="120" y="93" width="22" height="20" rx="3" fill="#26d96a" opacity="0.80"/>
+          <!-- cell values -->
+          <text x="31"  y="31" fill="#fff" font-size="6" font-family="monospace" text-anchor="middle">+240</text>
+          <text x="56"  y="31" fill="#fff" font-size="6" font-family="monospace" text-anchor="middle">-88</text>
+          <text x="81"  y="31" fill="#fff" font-size="6" font-family="monospace" text-anchor="middle">+410</text>
+          <text x="106" y="31" fill="#fff" font-size="6" font-family="monospace" text-anchor="middle">+120</text>
+          <text x="131" y="31" fill="#fff" font-size="6" font-family="monospace" text-anchor="middle">+580</text>
+          <text x="31"  y="56" fill="#fff" font-size="6" font-family="monospace" text-anchor="middle">-310</text>
+          <text x="56"  y="56" fill="#fff" font-size="6" font-family="monospace" text-anchor="middle">-55</text>
+          <text x="81"  y="56" fill="#fff" font-size="6" font-family="monospace" text-anchor="middle">+270</text>
+          <text x="106" y="56" fill="#fff" font-size="6" font-family="monospace" text-anchor="middle">+490</text>
+          <text x="131" y="56" fill="#fff" font-size="6" font-family="monospace" text-anchor="middle">off</text>
+          <text x="31"  y="81" fill="#fff" font-size="6" font-family="monospace" text-anchor="middle">+180</text>
+          <text x="56"  y="81" fill="#fff" font-size="6" font-family="monospace" text-anchor="middle">+620</text>
+          <text x="81"  y="81" fill="#fff" font-size="6" font-family="monospace" text-anchor="middle">-200</text>
+          <text x="106" y="81" fill="#fff" font-size="6" font-family="monospace" text-anchor="middle">+340</text>
+          <text x="131" y="81" fill="#fff" font-size="6" font-family="monospace" text-anchor="middle">+260</text>
+          <text x="31"  y="106" fill="#fff" font-size="6" font-family="monospace" text-anchor="middle">+90</text>
+          <text x="56"  y="106" fill="#fff" font-size="6" font-family="monospace" text-anchor="middle">-420</text>
+          <text x="81"  y="106" fill="#fff" font-size="6" font-family="monospace" text-anchor="middle">+310</text>
+          <text x="106" y="106" fill="#fff" font-size="6" font-family="monospace" text-anchor="middle">off</text>
+          <text x="131" y="106" fill="#fff" font-size="6" font-family="monospace" text-anchor="middle">+445</text>
+          <!-- right side monthly stats -->
+          <line x1="158" y1="0" x2="158" y2="140" stroke="#1e2a38" stroke-width="1"/>
+          <text x="168" y="12" fill="#546e7a" font-size="7" font-family="monospace">MONTH STATS</text>
+          <text x="168" y="30" fill="#546e7a" font-size="6.5" font-family="monospace">Win Rate</text>
+          <text x="168" y="42" fill="#26d96a" font-size="11" font-weight="bold" font-family="monospace">72.5%</text>
+          <text x="168" y="60" fill="#546e7a" font-size="6.5" font-family="monospace">Net P&amp;L</text>
+          <text x="168" y="72" fill="#26d96a" font-size="11" font-weight="bold" font-family="monospace">+$3,261</text>
+          <text x="168" y="90" fill="#546e7a" font-size="6.5" font-family="monospace">Avg Win</text>
+          <text x="168" y="102" fill="#00c8ff" font-size="11" font-weight="bold" font-family="monospace">$348</text>
+          <text x="168" y="120" fill="#546e7a" font-size="6.5" font-family="monospace">Avg Loss</text>
+          <text x="168" y="132" fill="#ff4757" font-size="11" font-weight="bold" font-family="monospace">-$218</text>
+          <!-- legend -->
+          <rect x="230" y="18" width="10" height="10" rx="2" fill="#26d96a" opacity="0.7"/>
+          <text x="244" y="27" fill="#546e7a" font-size="7" font-family="monospace">Profit day</text>
+          <rect x="230" y="35" width="10" height="10" rx="2" fill="#ff4757" opacity="0.6"/>
+          <text x="244" y="44" fill="#546e7a" font-size="7" font-family="monospace">Loss day</text>
+          <rect x="230" y="52" width="10" height="10" rx="2" fill="#1e2a38" opacity="0.9"/>
+          <text x="244" y="61" fill="#546e7a" font-size="7" font-family="monospace">No trade</text>
+        </svg>
+        <div class="preview-footer">
+          <span class="preview-badge green">▲ 72.5% win rate</span>
+          <span class="preview-badge red">▼ 3 loss days</span>
+        </div>
+      </div>
+
+    </div><!-- end previews -->
+  </div><!-- end body -->
+
+  <div class="home-stats">
+    <div class="home-stat">
+      <div class="home-stat-val"><span>∞</span></div>
+      <div class="home-stat-label">Trades Tracked</div>
+    </div>
+    <div class="home-stat">
+      <div class="home-stat-val">Real<span>-</span>time</div>
+      <div class="home-stat-label">P&L Analytics</div>
+    </div>
+    <div class="home-stat">
+      <div class="home-stat-val">100<span>%</span></div>
+      <div class="home-stat-label">Private & Secure</div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── LOGIN MODAL ─── -->
+<div id="loginModalBackdrop" onclick="handleBackdropClick(event)">
+  <div class="login-modal">
+    <button class="login-modal-close" onclick="closeLoginModal()">✕</button>
+    <div class="login-logo">📈 Trading <span>Journal</span></div>
     <div class="login-sub">// track · analyze · improve</div>
     <div class="login-card">
       <div class="login-card-title" id="loginCardTitle">Sign In</div>
-
       <div id="loginPasswordForm">
         <div class="login-field">
           <label>Email</label>
@@ -2778,7 +3140,6 @@
           No account? <a onclick="toggleSignupMode()">Create one</a>
         </div>
       </div>
-
       <div id="loginMsg" class="login-msg"></div>
     </div>
   </div>
@@ -2794,7 +3155,7 @@
     <div class="header-left">
       <!-- Home title -->
       <div class="header-title-home">
-        <h1>8<span>Journal</span></h1>
+        <h1>📈 Trading <span>Journal</span></h1>
         <div class="subtitle">// track · analyze · improve</div>
       </div>
       <!-- Lot Size Calc title -->
@@ -5474,10 +5835,18 @@ render = function() {
 
 // ── CONFIG: Replace with your Supabase project URL and anon key ──
 const SUPABASE_URL  = 'https://hbltuiycqrkrxnfnxtoc.supabase.co';
-const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhibHR1aXljcXJrcnhuZm54dG9jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgyNjQ5MzIsImV4cCI6MjA5Mzg0MDkzMn0.xIsukbhArGNbBThDZhJ3Jck4BOpTZANBY3I6SP_uOrI';
+const SUPABASE_ANON = 'sb_publishable_IvBjQumDbB7CqLtkYOHxHw_OR2ehWMv';
 // ─────────────────────────────────────────────────────────────────
 
-const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON, {
+  auth: {
+    persistSession:   true,
+    storageKey:       'trading-journal-auth',
+    storage:          window.localStorage,
+    autoRefreshToken: true,
+    detectSessionInUrl: true,
+  }
+});
 
 let _signupMode = false;
 
@@ -5535,82 +5904,106 @@ async function handleMagicLink() {
   setLoginMsg('Magic link sent! Check your email.', 'success');
 }
 
-async function handleSignOut() {
-  await _supabase.auth.signOut();
-  trades = []; accounts = [];
-  try { renderAccounts(); } catch(e) {}
-  try { populateAccountDropdown(); } catch(e) {}
-  try { render(); } catch(e) {}
-  document.getElementById('loginScreen').classList.remove('hidden');
-  const _msgEl = document.getElementById('loginMsg');
-  if (_msgEl) _msgEl.className = 'login-msg';
+function openLoginModal() {
+  document.getElementById('loginModalBackdrop').classList.add('open');
+  setTimeout(() => document.getElementById('loginEmail').focus(), 100);
 }
+function closeLoginModal() {
+  document.getElementById('loginModalBackdrop').classList.remove('open');
+}
+function handleBackdropClick(e) {
+  if (e.target === document.getElementById('loginModalBackdrop')) closeLoginModal();
+}
+
+async function handleSignOut() {
+  await _supabase.auth.signOut({ scope: 'local' });
+  trades = []; accounts = [];
+  _showLogin();
+  const msgEl = document.getElementById('loginMsg');
+  if (msgEl) msgEl.className = 'login-msg';
+}
+
+let _appLoaded = false;
+let _appLoading = false; // prevents concurrent calls
 
 async function loadAppData(userId) {
-  const loadEl = document.getElementById('appLoadingOverlay');
+  if (_appLoading) return;
+  _appLoading = true;
+  _appLoaded  = false;
+
+  const loadEl  = document.getElementById('appLoadingOverlay');
+  const homeEl  = document.getElementById('homePage');
+
+  // Hard safety net — overlay can NEVER stay stuck more than 8s
+  const safetyTimer = setTimeout(() => {
+    loadEl.classList.add('hidden');
+    homeEl.classList.add('hidden');
+    _appLoading = false;
+    _appLoaded  = true;
+  }, 8000);
+
   loadEl.classList.remove('hidden');
 
-  // Load accounts
-  const { data: acctData, error: acctErr } = await _supabase
-    .from('accounts').select('*').eq('user_id', userId).order('created_at');
-  if (!acctErr && acctData) accounts = acctData;
-
-  // Load trades — normalise account_id → accountId for existing JS
-  const { data: tradeData, error: tradeErr } = await _supabase
-    .from('trades').select('*').eq('user_id', userId).order('date', { ascending: false });
-  if (!tradeErr && tradeData) {
-    trades = tradeData.map(t => ({ ...t, accountId: t.account_id }));
+  try {
+    const [acctRes, tradeRes] = await Promise.all([
+      _supabase.from('accounts').select('*').eq('user_id', userId).order('created_at'),
+      _supabase.from('trades').select('*').eq('user_id', userId).order('date', { ascending: false })
+    ]);
+    if (!acctRes.error  && acctRes.data)  accounts = acctRes.data;
+    if (!tradeRes.error && tradeRes.data) trades = tradeRes.data.map(t => ({ ...t, accountId: t.account_id }));
+  } catch (e) {
+    console.error('Data fetch error:', e);
   }
 
+  clearTimeout(safetyTimer);
+
+  // Hide overlay + home page — always runs
   loadEl.classList.add('hidden');
-  document.getElementById('loginScreen').classList.add('hidden');
+  homeEl.classList.add('hidden');
+  closeLoginModal();
+  _appLoaded  = true;
+  _appLoading = false;
 
-  // Boot the app
-  renderAccounts();
-  populateAccountDropdown();
-  render();
-  renderBalanceArcs();
-  refreshEquityData();
+  try { renderAccounts(); }          catch(e) { console.error(e); }
+  try { populateAccountDropdown(); } catch(e) { console.error(e); }
+  try { render(); }                  catch(e) { console.error(e); }
+  try { renderBalanceArcs(); }       catch(e) { console.error(e); }
+  try { refreshEquityData(); }       catch(e) { console.error(e); }
 }
 
-if (_supabase) {
-  let _appLoaded = false;
-
-  // ── 1. Check for an existing session immediately on page load ──
-  // This handles refresh/reload — we don't wait for onAuthStateChange
-  // which can be slow or fire with null before the session is restored.
-  _supabase.auth.getSession().then(async ({ data: { session } }) => {
-    if (session?.user && !_appLoaded) {
-      _appLoaded = true;
-      await loadAppData(session.user.id);
-    } else if (!session) {
-      document.getElementById('appLoadingOverlay').classList.add('hidden');
-      document.getElementById('loginScreen').classList.remove('hidden');
-    }
-  });
-
-  // ── 2. Listen for sign in / sign out events ──
-  // SIGNED_IN: fires when user logs in fresh (not on reload — getSession handles that)
-  // SIGNED_OUT: fires when user logs out
-  _supabase.auth.onAuthStateChange(async (event, session) => {
-    if (event === 'SIGNED_IN' && session?.user && !_appLoaded) {
-      _appLoaded = true;
-      await loadAppData(session.user.id);
-    } else if (event === 'SIGNED_OUT') {
-      _appLoaded = false;
-      trades = []; accounts = [];
-      try { renderAccounts(); } catch(e) {}
-      try { populateAccountDropdown(); } catch(e) {}
-      try { render(); } catch(e) {}
-      document.getElementById('appLoadingOverlay').classList.add('hidden');
-      document.getElementById('loginScreen').classList.remove('hidden');
-    }
-  });
-
-} else {
-  const _ol = document.getElementById('appLoadingOverlay');
-  if (_ol) _ol.classList.add('hidden');
+function _showLogin() {
+  _appLoaded  = false;
+  _appLoading = false;
+  closeLoginModal();
+  document.getElementById('appLoadingOverlay').classList.add('hidden');
+  document.getElementById('homePage').classList.remove('hidden');
 }
+
+// ── BOOT ──────────────────────────────────────────────────────────
+(async () => {
+  try {
+    const { data: { session } } = await _supabase.auth.getSession();
+    if (session?.user) {
+      await loadAppData(session.user.id);
+    } else {
+      _showLogin();
+    }
+  } catch (e) {
+    console.error('Boot error:', e);
+    _showLogin();
+  }
+})();
+
+// ── LIVE AUTH EVENTS ──────────────────────────────────────────────
+_supabase.auth.onAuthStateChange(async (event, session) => {
+  if (event === 'SIGNED_IN' && !_appLoaded && !_appLoading) {
+    await loadAppData(session.user.id);
+  } else if (event === 'SIGNED_OUT') {
+    trades = []; accounts = [];
+    _showLogin();
+  }
+});
+
 
 </script>
 </body>
