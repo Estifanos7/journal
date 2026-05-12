@@ -5930,44 +5930,67 @@ async function loadAppData(userId) {
   _appLoading = true;
   _appLoaded  = false;
 
-  const loadEl  = document.getElementById('appLoadingOverlay');
-  const homeEl  = document.getElementById('homePage');
-
-  // Hard safety net — overlay can NEVER stay stuck more than 8s
-  const safetyTimer = setTimeout(() => {
-    loadEl.classList.add('hidden');
-    homeEl.classList.add('hidden');
-    _appLoading = false;
-    _appLoaded  = true;
-  }, 8000);
-
+  const loadEl = document.getElementById('appLoadingOverlay');
+  const homeEl = document.getElementById('homePage');
   loadEl.classList.remove('hidden');
 
+  const finish = () => {
+    clearTimeout(safetyTimer);
+    loadEl.classList.add('hidden');
+    homeEl.classList.add('hidden');
+    closeLoginModal();
+    _appLoaded  = true;
+    _appLoading = false;
+  };
+
+  // Safety net — never stuck more than 8s
+  const safetyTimer = setTimeout(() => {
+    console.warn('[loadAppData] safety timer fired');
+    finish();
+    try { renderAccounts(); populateAccountDropdown(); render(); renderBalanceArcs(); refreshEquityData(); } catch(e) {}
+  }, 8000);
+
   try {
+    // Force a fresh server-validated token before querying.
+    // getSession() can return a stale/expired token that silently
+    // fails RLS checks and returns empty data. getUser() revalidates.
+    const { data: { user }, error: userErr } = await _supabase.auth.getUser();
+    if (userErr || !user) {
+      console.error('[loadAppData] getUser failed:', userErr);
+      finish();
+      _showLogin();
+      return;
+    }
+
+    // Use the verified user id (not the one passed in, just to be safe)
+    const uid = user.id;
+    console.log('[loadAppData] fetching data for', user.email);
+
     const [acctRes, tradeRes] = await Promise.all([
-      _supabase.from('accounts').select('*').eq('user_id', userId).order('created_at'),
-      _supabase.from('trades').select('*').eq('user_id', userId).order('date', { ascending: false })
+      _supabase.from('accounts').select('*').eq('user_id', uid).order('created_at'),
+      _supabase.from('trades').select('*').eq('user_id', uid).order('date', { ascending: false })
     ]);
-    if (!acctRes.error  && acctRes.data)  accounts = acctRes.data;
-    if (!tradeRes.error && tradeRes.data) trades = tradeRes.data.map(t => ({ ...t, accountId: t.account_id }));
+
+    console.log('[loadAppData] accounts:', acctRes.data?.length ?? 'err', acctRes.error?.message ?? '');
+    console.log('[loadAppData] trades:  ', tradeRes.data?.length ?? 'err', tradeRes.error?.message ?? '');
+
+    if (acctRes.error)  console.error('[loadAppData] accounts error:', acctRes.error);
+    if (tradeRes.error) console.error('[loadAppData] trades error:  ', tradeRes.error);
+
+    if (acctRes.data)  accounts = acctRes.data;
+    if (tradeRes.data) trades   = tradeRes.data.map(t => ({ ...t, accountId: t.account_id }));
+
   } catch (e) {
-    console.error('Data fetch error:', e);
+    console.error('[loadAppData] unexpected error:', e);
   }
 
-  clearTimeout(safetyTimer);
+  finish();
 
-  // Hide overlay + home page — always runs
-  loadEl.classList.add('hidden');
-  homeEl.classList.add('hidden');
-  closeLoginModal();
-  _appLoaded  = true;
-  _appLoading = false;
-
-  try { renderAccounts(); }          catch(e) { console.error(e); }
-  try { populateAccountDropdown(); } catch(e) { console.error(e); }
-  try { render(); }                  catch(e) { console.error(e); }
-  try { renderBalanceArcs(); }       catch(e) { console.error(e); }
-  try { refreshEquityData(); }       catch(e) { console.error(e); }
+  try { renderAccounts(); }          catch(e) { console.error('[render] renderAccounts:', e); }
+  try { populateAccountDropdown(); } catch(e) { console.error('[render] populateAccountDropdown:', e); }
+  try { render(); }                  catch(e) { console.error('[render] render:', e); }
+  try { renderBalanceArcs(); }       catch(e) { console.error('[render] renderBalanceArcs:', e); }
+  try { refreshEquityData(); }       catch(e) { console.error('[render] refreshEquityData:', e); }
 }
 
 function _showLogin() {
@@ -5997,9 +6020,15 @@ async function bootCheck() {
       _initialHandled = true;
       clearTimeout(_bootTimeout);
       await loadAppData(session.user.id);
+    } else {
+      // No session in localStorage — show home immediately, don't wait for listener
+      _initialHandled = true;
+      clearTimeout(_bootTimeout);
+      _showLogin();
     }
   } catch(e) {
     console.warn('[auth] getSession error:', e);
+    _showLogin();
   }
 }
 bootCheck();
@@ -6024,7 +6053,8 @@ _supabase.auth.onAuthStateChange(async (event, session) => {
       await loadAppData(session.user.id);
     }
   } else if (event === 'SIGNED_OUT') {
-    location.reload(); // Cleanest way to reset app state on logout
+    trades = []; accounts = [];
+    _showLogin();
   }
 });
 
