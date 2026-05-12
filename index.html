@@ -5840,11 +5840,10 @@ const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFz
 
 const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON, {
   auth: {
-    persistSession:   true,
-    storageKey:       'trading-journal-auth',
-    storage:          window.localStorage,
-    autoRefreshToken: true,
+    persistSession:     true,
+    autoRefreshToken:   true,
     detectSessionInUrl: true,
+    storage:            window.localStorage,
   }
 });
 
@@ -5997,15 +5996,28 @@ _supabase.auth.onAuthStateChange(async (event, session) => {
   console.log('[auth]', event, session?.user?.email ?? 'no user');
 
   if (event === 'INITIAL_SESSION') {
+    // Fires once on every page load — the definitive auth state
     clearTimeout(_bootTimeout);
     if (session?.user) {
       await loadAppData(session.user.id);
     } else {
       _showLogin();
     }
-  } else if (event === 'SIGNED_IN' && !_appLoaded && !_appLoading) {
+
+  } else if (event === 'SIGNED_IN') {
+    // User just signed in via the login form
     clearTimeout(_bootTimeout);
-    await loadAppData(session.user.id);
+    if (!_appLoaded && !_appLoading) {
+      await loadAppData(session.user.id);
+    }
+
+  } else if (event === 'TOKEN_REFRESHED') {
+    // Access token was silently refreshed — session is still alive.
+    // If for some reason the app isn't loaded yet, recover.
+    if (!_appLoaded && !_appLoading && session?.user) {
+      await loadAppData(session.user.id);
+    }
+
   } else if (event === 'SIGNED_OUT') {
     trades = []; accounts = [];
     _showLogin();
