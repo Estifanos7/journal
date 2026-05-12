@@ -5980,23 +5980,31 @@ function _showLogin() {
 }
 
 // ── BOOT ──────────────────────────────────────────────────────────
-(async () => {
-  try {
-    const { data: { session } } = await _supabase.auth.getSession();
+// With the new sb_publishable_ key system, onAuthStateChange fires
+// INITIAL_SESSION on every page load — with the session if logged in,
+// or null if not. This is the only reliable way to detect auth state.
+// getSession() races with this and can return stale/null data.
+
+// Safety net: if INITIAL_SESSION never fires within 5s, show login
+const _bootTimeout = setTimeout(() => {
+  if (!_appLoaded && !_appLoading) {
+    console.warn('Auth timeout — showing home');
+    _showLogin();
+  }
+}, 5000);
+
+_supabase.auth.onAuthStateChange(async (event, session) => {
+  console.log('[auth]', event, session?.user?.email ?? 'no user');
+
+  if (event === 'INITIAL_SESSION') {
+    clearTimeout(_bootTimeout);
     if (session?.user) {
       await loadAppData(session.user.id);
     } else {
       _showLogin();
     }
-  } catch (e) {
-    console.error('Boot error:', e);
-    _showLogin();
-  }
-})();
-
-// ── LIVE AUTH EVENTS ──────────────────────────────────────────────
-_supabase.auth.onAuthStateChange(async (event, session) => {
-  if (event === 'SIGNED_IN' && !_appLoaded && !_appLoading) {
+  } else if (event === 'SIGNED_IN' && !_appLoaded && !_appLoading) {
+    clearTimeout(_bootTimeout);
     await loadAppData(session.user.id);
   } else if (event === 'SIGNED_OUT') {
     trades = []; accounts = [];
