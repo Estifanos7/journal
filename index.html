@@ -5997,15 +5997,9 @@ async function bootCheck() {
       _initialHandled = true;
       clearTimeout(_bootTimeout);
       await loadAppData(session.user.id);
-    } else {
-      // No session in localStorage — show home immediately, don't wait for listener
-      _initialHandled = true;
-      clearTimeout(_bootTimeout);
-      _showLogin();
     }
   } catch(e) {
     console.warn('[auth] getSession error:', e);
-    _showLogin();
   }
 }
 bootCheck();
@@ -6030,8 +6024,7 @@ _supabase.auth.onAuthStateChange(async (event, session) => {
       await loadAppData(session.user.id);
     }
   } else if (event === 'SIGNED_OUT') {
-    trades = []; accounts = [];
-    _showLogin();
+    location.reload(); // Cleanest way to reset app state on logout
   }
 });
 
